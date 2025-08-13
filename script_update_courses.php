@@ -68,9 +68,9 @@ while ($choice != "1" && $choice != "2")
 if ($choice == "2")
 {
   /* -- Inputs -- */
-  $originalShortname = readline("Shortname du cours original : ");
-  $newFullName = readline("Nouveau nom du cours (fullname) : ");
-  $newShortName = readline("Nouveau shortname du cours : ");
+  $courseId = readline("Id du cours : ");
+  // $newFullName = readline("Nouveau nom du cours (fullname) : ");
+  // $newShortName = readline("Nouveau shortname du cours : ");
   // $startDateInput = readline("Date de début (DD.MM.YYYY) : ");
   // $endDateInput = readline("Date de fin (DD.MM.YYYY) : ");
 
@@ -79,10 +79,11 @@ if ($choice == "2")
   // $endDate = parseDate($endDateInput);
 
   /* -- Lookup -- */
-  $course = $DB->get_record('course', ['shortname' => $originalShortname], '*', MUST_EXIST);
+  $course = $DB->get_record('course', ['id' => $courseId], '*', MUST_EXIST);
 
   /* -- Move original course -- */
   $baseCategoryId = $course->category;
+  $baseFullname = $course->fullname;
   $course->category = $archiveCategoryId;
   $course->fullname = shortYears($course->startdate, $course->enddate) . $course->fullname;
   update_course($course);
@@ -91,7 +92,7 @@ if ($choice == "2")
   /* -- Copy -- */
   $formData = new stdClass;
   $formData->courseid = $course->id;
-  $formData->fullname = $course->fullname;
+  $formData->fullname = $baseFullname;
   $formData->shortname = $course->shortname;
   $formData->category = $baseCategoryId;
   $formData->visible = 1;
@@ -120,30 +121,25 @@ foreach ($ids as $id)
 {
   $course = $DB->get_record('course', ['id' => $id]);
 
-  echo "=== {$course->fullname} ===\n\n";
-  $newFullName = readline("Nouveau nom du cours (fullname) : ");
-  $newShortName = readline("Nouveau shortname du cours : ");
-  $startDateInput = readline("Date de début (DD.MM.YYYY) : ");
-  $endDateInput = readline("Date de fin (DD.MM.YYYY) : ");
-
-  $startDate = parseDate($startDateInput);
-  $endDate = parseDate($endDateInput);
+  echo "Copie de {$course->fullname}...";
 
   /* -- Move original course -- */
   $baseCategoryId = $course->category;
+  $baseFullname = $course->fullname;
   $course->category = $archiveCategoryId;
+  $course->fullname = shortYears($course->startdate, $course->enddate) . $course->fullname;
   update_course($course);
   echo "Cours déplacé dans la catégorie 'Archive'\n";
-
+ 
   /* -- Copy -- */
   $formData = new stdClass;
   $formData->courseid = $course->id;
-  $formData->fullname = $newFullName;
-  $formData->shortname = $newShortName;
+  $formData->fullname = $course->fullname;
+  $formData->shortname = $course->shortname;
   $formData->category = $baseCategoryId;
   $formData->visible = 1;
-  $formData->startdate = $startDate;
-  $formData->enddate = $endDate;
+  $formData->startdate = nextYear($course->startdate);
+  $formData->enddate = nextYear($course->enddate);
   $formData->idnumber = '';
   $formData->userdata = 0;
   $formData->role_1 = 1;
