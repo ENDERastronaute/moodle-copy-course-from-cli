@@ -81,13 +81,18 @@ if ($choice == "2")
   /* -- Lookup -- */
   $course = $DB->get_record('course', ['id' => $courseId], '*', MUST_EXIST);
 
+  echo "Copie de {$course->fullname}...";
+
+
   /* -- Move original course -- */
   $baseCategoryId = $course->category;
   $baseFullname = $course->fullname;
+  $baseShortname = $course->shortname;
   $course->category = $archiveCategoryId;
   $course->fullname = shortYears($course->startdate, $course->enddate) . $course->fullname;
+  $course->shortname = shortYears($course->startdate, $course->enddate) . $course->shortname;
   update_course($course);
-  echo "Cours déplacé dans la catégorie 'archive'\n";
+  echo "Cours déplacé dans la catégorie 'Archive'\n";
 
   /* -- Copy -- */
   $formData = new stdClass;
@@ -106,6 +111,12 @@ if ($choice == "2")
 
   $copyData = copy_helper::process_formdata($formData);
   $copyids = copy_helper::create_copy($copyData);
+
+  $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
+  $course->fullname = $baseFullname;
+  $course->shortname = $baseShortname;
+
+  update_course($course);
 
   echo "Cours créé avec succès.\n";
   exit();
@@ -126,8 +137,10 @@ foreach ($ids as $id)
   /* -- Move original course -- */
   $baseCategoryId = $course->category;
   $baseFullname = $course->fullname;
+  $baseShortname = $course->shortname
   $course->category = $archiveCategoryId;
   $course->fullname = shortYears($course->startdate, $course->enddate) . $course->fullname;
+  $course->shortname = shortYears($course->startdate, $course->enddate) . $course->shortname;
   update_course($course);
   echo "Cours déplacé dans la catégorie 'Archive'\n";
  
@@ -148,6 +161,12 @@ foreach ($ids as $id)
 
   $copyData = copy_helper::process_formdata($formData);
   $copyids = copy_helper::create_copy($copyData);
+
+  $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
+  $course->fullname = $baseFullname;
+  $course->shortname = $baseShortname;
+
+  update_course($course);
 
   echo "Cours créé avec succès.\n";
 }
