@@ -32,7 +32,8 @@ $archiveCategoryId = 8;
 
 /* -- Functions -- */
 
-function nextYear($timestamp) {
+function nextYear($timestamp) 
+{
   $date = new DateTime();
   $date->setTimestamp($timestamp);
   $date->modify('+1 year');
@@ -40,17 +41,53 @@ function nextYear($timestamp) {
   return $date->getTimestamp();
 }
 
-function shortYears($timestampStart, $timestampEnd) {
+function shortYears($timestampStart, $timestampEnd) 
+{
   $start = new DateTime();
   $start->setTimestamp($timestampStart);
+  
+  $startYear = intval($start->format('y'));
+  $startMonth = intval($start->format('n'));
 
-  $end = new DateTime();
-  $end->setTimestamp($timestampEnd);
+  if ($startMonth < 9) 
+  { // janvier -> août = prec - actu
+    $schoolYearStart = $startYear - 1;
+  }
+  else 
+  { // septembre -> décembre = actu - proc
+    $schoolYearStart = $startYear;
+  }
 
-  return $start->format('y') . '-' . $end->format('y') . ' / ';
+  if ($timestampEnd > 0) 
+  {
+    $end = new DateTime();
+    $end->setTimestamp($timestampEnd);
+    $endYear = intval($end->format('y'));
+    $endMonth = intval($end->format('n'));
+
+    if ($endMonth >= 9)
+    {
+      $schoolYearEnd = $endYear + 1;
+    }
+    else
+    {
+      $schoolYearEnd = $endYear;
+    }
+  }
+  else
+  {
+    $schoolYearEnd = $schoolYearStart + 1;
+  }
+
+  // Siècles
+  //$schoolYearStart = printf('%02d', $schoolYearStart % 100);
+  //$schoolYearEnd = printf('%02d', $schoolYearEnd % 100);
+
+  return "{$schoolYearStart}-{$schoolYearEnd} / ";
 }
 
-function parseDate(string $dateString) {
+function parseDate(string $dateString) 
+{
   $date = DateTime::createFromFormat("!d.m.Y", $dateString);
   return $date ? $date->getTimestamp() : time();
 }
@@ -81,7 +118,7 @@ if ($choice == "2")
   /* -- Lookup -- */
   $course = $DB->get_record('course', ['id' => $courseId], '*', MUST_EXIST);
 
-  echo "Copie de {$course->fullname}...";
+  echo "Copie de {$course->fullname}...\n";
 
 
   /* -- Move original course -- */
@@ -98,7 +135,7 @@ if ($choice == "2")
   $formData = new stdClass;
   $formData->courseid = $course->id;
   $formData->fullname = $baseFullname;
-  $formData->shortname = $course->shortname;
+  $formData->shortname = $baseShortname;
   $formData->category = $baseCategoryId;
   $formData->visible = 1;
   $formData->startdate = nextYear($course->startdate);
@@ -112,11 +149,11 @@ if ($choice == "2")
   $copyData = copy_helper::process_formdata($formData);
   $copyids = copy_helper::create_copy($copyData);
 
-  $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
-  $course->fullname = $baseFullname;
-  $course->shortname = $baseShortname;
+  // $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
+  // $course->fullname = $baseFullname;
+  // $course->shortname = $baseShortname;
 
-  update_course($course);
+  // update_course($course);
 
   echo "Cours créé avec succès.\n";
   exit();
@@ -132,12 +169,12 @@ foreach ($ids as $id)
 {
   $course = $DB->get_record('course', ['id' => $id]);
 
-  echo "Copie de {$course->fullname}...";
+  echo "Copie de {$course->fullname}...\n";
 
   /* -- Move original course -- */
   $baseCategoryId = $course->category;
   $baseFullname = $course->fullname;
-  $baseShortname = $course->shortname
+  $baseShortname = $course->shortname;
   $course->category = $archiveCategoryId;
   $course->fullname = shortYears($course->startdate, $course->enddate) . $course->fullname;
   $course->shortname = shortYears($course->startdate, $course->enddate) . $course->shortname;
@@ -147,8 +184,8 @@ foreach ($ids as $id)
   /* -- Copy -- */
   $formData = new stdClass;
   $formData->courseid = $course->id;
-  $formData->fullname = $course->fullname;
-  $formData->shortname = $course->shortname;
+  $formData->fullname = $baseFullname;
+  $formData->shortname = $baseShortname;
   $formData->category = $baseCategoryId;
   $formData->visible = 1;
   $formData->startdate = nextYear($course->startdate);
@@ -162,11 +199,11 @@ foreach ($ids as $id)
   $copyData = copy_helper::process_formdata($formData);
   $copyids = copy_helper::create_copy($copyData);
 
-  $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
-  $course->fullname = $baseFullname;
-  $course->shortname = $baseShortname;
+  // $course = $DB->get_record('course', ['shortname' => $baseShortname . "_1"]);
+  // $course->fullname = $baseFullname;
+  // $course->shortname = $baseShortname;
 
-  update_course($course);
+  // update_course($course);
 
   echo "Cours créé avec succès.\n";
 }
