@@ -12,3 +12,8 @@ just copy the two scripts inside the moodle root directory (moodle code root, NO
 
 > [!CAUTION]
 > Use the same user that launches moodle to execute the script or it won't have the expected behavior!
+
+## Usage
+
+`script_get_course.php` shows you all scripts that aren't part of Archive category and allows you to save the IDs to `course_ids.txt`.  
+`script_update_course.php` Allows you to copy all courses contained in the previous .txt file OR to update one with a given ID.
